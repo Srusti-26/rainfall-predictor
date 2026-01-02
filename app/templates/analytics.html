@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4"><i class="fas fa-chart-line me-2"></i>Analytics Dashboard</h1>
+    
+    <!-- Model Accuracy Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Model Performance Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <h3 id="accuracy-value" class="text-success">--</h3>
+                                <p class="text-muted">Accuracy</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <h3 id="rmse-value" class="text-info">--</h3>
+                                <p class="text-muted">RMSE</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <h3 id="mae-value" class="text-warning">--</h3>
+                                <p class="text-muted">MAE</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <h3 id="r2-value" class="text-primary">--</h3>
+                                <p class="text-muted">R² Score</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Monthly Rainfall Pattern</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-leaf me-2"></i>Seasonal Rainfall Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="seasonalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Top 10 Locations by Average Rainfall</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="locationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prediction History Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Predictions</h5>
+                    <a href="{{ url_for('main.export_csv') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-download me-1"></i>Export to CSV
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="prediction-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Location</th>
+                                    <th>Temperature (°C)</th>
+                                    <th>Humidity (%)</th>
+                                    <th>Predicted Rainfall (mm)</th>
+                                    <th>Probability (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No predictions yet. Make your first prediction!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.metric-box {
+    padding: 20px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    margin: 10px 0;
+}
+.metric-box h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch model accuracy
+    fetch('/api/model-accuracy')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('accuracy-value').textContent = data.metrics.accuracy.toFixed(1) + '%';
+                document.getElementById('rmse-value').textContent = data.metrics.rmse.toFixed(2);
+                document.getElementById('mae-value').textContent = data.metrics.mae.toFixed(2);
+                document.getElementById('r2-value').textContent = data.metrics.r2_score.toFixed(2);
+            }
+        });
+
+    // Fetch analytics data
+    fetch('/api/analytics-data')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Monthly Rainfall Chart
+                const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+                new Chart(monthlyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Average Rainfall (mm)',
+                            data: Object.values(data.monthly_rainfall),
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+
+                // Seasonal Rainfall Chart
+                const seasonalCtx = document.getElementById('seasonalChart').getContext('2d');
+                new Chart(seasonalCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(data.seasonal_rainfall),
+                        datasets: [{
+                            data: Object.values(data.seasonal_rainfall),
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.6)',
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(255, 206, 86, 0.6)',
+                                'rgba(75, 192, 192, 0.6)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+
+                // Location Rainfall Chart
+                const locationCtx = document.getElementById('locationChart').getContext('2d');
+                new Chart(locationCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(data.location_rainfall),
+                        datasets: [{
+                            label: 'Average Rainfall (mm)',
+                            data: Object.values(data.location_rainfall),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: true }
+                        },
+                        scales: {
+                            x: { 
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Average Rainfall (mm)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Location'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Update prediction history table
+                if (data.prediction_history && data.prediction_history.length > 0) {
+                    const tbody = document.getElementById('history-tbody');
+                    tbody.innerHTML = '';
+                    data.prediction_history.reverse().forEach(pred => {
+                        const row = `
+                            <tr>
+                                <td>${pred.timestamp}</td>
+                                <td>${pred.location}</td>
+                                <td>${pred.temperature}</td>
+                                <td>${pred.humidity}</td>
+                                <td>${pred.predicted_rainfall}</td>
+                                <td><span class="badge bg-${pred.probability > 70 ? 'danger' : pred.probability > 40 ? 'warning' : 'success'}">${pred.probability}%</span></td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                }
+            }
+        });
+});
+</script>
+{% endblock %}

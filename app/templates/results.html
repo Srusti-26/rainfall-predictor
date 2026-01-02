@@ -1,0 +1,490 @@
+
+{% extends "base.html" %}
+
+{% block title %}Rainfall Predictor - Results{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <!-- Page Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-3">Rainfall Prediction Results</h1>
+            <p class="lead text-muted">
+                Here's your detailed rainfall forecast based on the provided weather parameters
+            </p>
+        </div>
+        
+        <!-- Main Results Card -->
+        <div class="card border-0 shadow-lg mb-5">
+            <div class="card-header bg-gradient">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Prediction Summary
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-map-marker-alt text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-0">Location</h6>
+                                <p class="mb-0 fs-5">{{ result.location }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-0">Date</h6>
+                                <p class="mb-0 fs-5">{{ result.date }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="text-center p-4 rainfall-result-container">
+                            <!-- Rainfall Gauge -->
+                            <div class="rainfall-gauge mb-3">
+                                <div class="rainfall-gauge-outer">
+                                    <div class="rainfall-gauge-inner">
+                                        <div class="rainfall-gauge-fill" id="rainfall-gauge-fill"></div>
+                                    </div>
+                                </div>
+                                <div class="rainfall-gauge-marker" style="left: 25%"></div>
+                                <div class="rainfall-gauge-marker" style="left: 50%"></div>
+                                <div class="rainfall-gauge-marker" style="left: 75%"></div>
+                                
+                                <div class="rainfall-gauge-labels">
+                                    <span>0</span>
+                                    <span>5</span>
+                                    <span>10</span>
+                                    <span>15+</span>
+                                </div>
+                            </div>
+                            
+                            <h2 class="display-4 fw-bold mb-0">{{ result.prediction }} mm</h2>
+                            <p class="text-muted">Predicted Rainfall</p>
+                            
+                            <div class="confidence-meter mt-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Confidence Level</span>
+                                    <span class="fw-bold">{{ (result.confidence * 100) | round(1) }}%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                         style="width: 0%;" 
+                                         aria-valuenow="{{ result.confidence * 100 }}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Rainfall Interpretation -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Rainfall Interpretation</h5>
+                        
+                        {% if result.prediction < 0.5 %}
+                            <div class="alert alert-success d-flex align-items-center" role="alert">
+                                <div class="weather-icon me-3">
+                                    <i class="fas fa-sun fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">No significant rainfall expected</h5>
+                                    <p class="mb-0">
+                                        Conditions appear to be dry or with minimal precipitation. 
+                                        Perfect weather for outdoor activities.
+                                    </p>
+                                </div>
+                            </div>
+                        {% elif result.prediction < 2.5 %}
+                            <div class="alert alert-info d-flex align-items-center" role="alert">
+                                <div class="weather-icon me-3">
+                                    <i class="fas fa-cloud-sun-rain fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">Light rainfall expected</h5>
+                                    <p class="mb-0">
+                                        You might experience a light drizzle or brief shower.
+                                        A light jacket might be useful.
+                                    </p>
+                                </div>
+                            </div>
+                        {% elif result.prediction < 10 %}
+                            <div class="alert alert-primary d-flex align-items-center" role="alert">
+                                <div class="weather-icon me-3">
+                                    <i class="fas fa-cloud-rain fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">Moderate rainfall expected</h5>
+                                    <p class="mb-0">
+                                        Consider carrying an umbrella as noticeable rain is likely.
+                                        Outdoor activities may be affected.
+                                    </p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                <div class="weather-icon me-3">
+                                    <i class="fas fa-cloud-showers-heavy fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">Heavy rainfall expected</h5>
+                                    <p class="mb-0">
+                                        Prepare for significant precipitation that may affect outdoor activities.
+                                        Consider rescheduling outdoor plans.
+                                    </p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Input Parameters Card -->
+        <div class="card border-0 shadow-lg mb-5">
+            <div class="card-header bg-gradient">
+                <h5 class="mb-0">
+                    <i class="fas fa-sliders-h me-2"></i>Input Parameters
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 bg-light border-0">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold mb-3">Temperature & Humidity</h6>
+                                
+                                <div class="parameter-item d-flex align-items-center mb-3">
+                                    <div class="parameter-icon bg-danger bg-opacity-10 text-danger">
+                                        <i class="fas fa-temperature-high"></i>
+                                    </div>
+                                    <div class="parameter-info">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Temperature</span>
+                                            <span class="fw-bold">{{ input_params.temperature }} °C</span>
+                                        </div>
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            <div class="progress-bar bg-danger" role="progressbar" 
+                                                 style="width: {{ (input_params.temperature / 50 * 100) | round }}%;" 
+                                                 aria-valuenow="{{ input_params.temperature }}" 
+                                                 aria-valuemin="0" aria-valuemax="50">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="parameter-item d-flex align-items-center">
+                                    <div class="parameter-icon bg-primary bg-opacity-10 text-primary">
+                                        <i class="fas fa-tint"></i>
+                                    </div>
+                                    <div class="parameter-info">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Humidity</span>
+                                            <span class="fw-bold">{{ input_params.humidity }}%</span>
+                                        </div>
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            <div class="progress-bar bg-primary" role="progressbar" 
+                                                 style="width: {{ input_params.humidity }}%;" 
+                                                 aria-valuenow="{{ input_params.humidity }}" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100 bg-light border-0">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold mb-3">Pressure & Wind</h6>
+                                
+                                <div class="parameter-item d-flex align-items-center mb-3">
+                                    <div class="parameter-icon bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="fas fa-compress-arrows-alt"></i>
+                                    </div>
+                                    <div class="parameter-info">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Pressure</span>
+                                            <span class="fw-bold">{{ input_params.pressure }} hPa</span>
+                                        </div>
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            <div class="progress-bar bg-secondary" role="progressbar" 
+                                                 style="width: {{ ((input_params.pressure - 950) / 150 * 100) | round }}%;" 
+                                                 aria-valuenow="{{ input_params.pressure }}" 
+                                                 aria-valuemin="950" aria-valuemax="1100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="parameter-item d-flex align-items-center">
+                                    <div class="parameter-icon bg-info bg-opacity-10 text-info">
+                                        <i class="fas fa-wind"></i>
+                                    </div>
+                                    <div class="parameter-info">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Wind Speed</span>
+                                            <span class="fw-bold">{{ input_params.wind_speed }} km/h</span>
+                                        </div>
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            <div class="progress-bar bg-info" role="progressbar" 
+                                                 style="width: {{ (input_params.wind_speed / 50 * 100) | round }}%;" 
+                                                 aria-valuenow="{{ input_params.wind_speed }}" 
+                                                 aria-valuemin="0" aria-valuemax="50">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Parameters -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6 class="fw-bold mb-3">Additional Parameters</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Value</th>
+                                        <th>Impact on Prediction</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if input_params.cloud_cover is defined %}
+                                    <tr>
+                                        <td><i class="fas fa-cloud me-2 text-secondary"></i>Cloud Cover</td>
+                                        <td>{{ input_params.cloud_cover }}%</td>
+                                        <td>
+                                            <div class="impact-indicator">
+                                                {% if input_params.cloud_cover > 70 %}
+                                                    <span class="impact-high">High</span>
+                                                {% elif input_params.cloud_cover > 30 %}
+                                                    <span class="impact-medium">Medium</span>
+                                                {% else %}
+                                                    <span class="impact-low">Low</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    
+                                    {% if input_params.season is defined %}
+                                    <tr>
+                                        <td><i class="fas fa-leaf me-2 text-success"></i>Season</td>
+                                        <td>{{ input_params.season|capitalize }}</td>
+                                        <td>
+                                            <div class="impact-indicator">
+                                                {% if input_params.season in ['autumn', 'winter'] %}
+                                                    <span class="impact-high">High</span>
+                                                {% elif input_params.season == 'spring' %}
+                                                    <span class="impact-medium">Medium</span>
+                                                {% else %}
+                                                    <span class="impact-low">Low</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    
+                                    {% if input_params.time_of_day is defined %}
+                                    <tr>
+                                        <td><i class="fas fa-clock me-2 text-warning"></i>Time of Day</td>
+                                        <td>{{ input_params.time_of_day|capitalize }}</td>
+                                        <td>
+                                            <div class="impact-indicator">
+                                                {% if input_params.time_of_day in ['evening', 'night'] %}
+                                                    <span class="impact-medium">Medium</span>
+                                                {% else %}
+                                                    <span class="impact-low">Low</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center mb-5">
+            <a href="{{ url_for('main.predict') }}" class="btn btn-outline-primary btn-lg px-4">
+                <i class="fas fa-redo me-2"></i>Make Another Prediction
+            </a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-lg px-4">
+                <i class="fas fa-home me-2"></i>Return to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate confidence meter
+        setTimeout(() => {
+            const confidenceBar = document.querySelector('.confidence-meter .progress-bar');
+            if (confidenceBar) {
+                confidenceBar.style.width = '{{ result.confidence * 100 }}%';
+            }
+        }, 300);
+        
+        // Set rainfall gauge fill level
+        const rainfallGaugeFill = document.getElementById('rainfall-gauge-fill');
+        if (rainfallGaugeFill) {
+            // Calculate fill percentage (max at 15mm)
+            const fillPercentage = Math.min({{ result.prediction }} / 15 * 100, 100);
+            setTimeout(() => {
+                rainfallGaugeFill.style.height = fillPercentage + '%';
+            }, 500);
+        }
+        
+        // Animate parameter bars
+        setTimeout(() => {
+            const parameterBars = document.querySelectorAll('.parameter-info .progress-bar');
+            parameterBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        }, 300);
+    });
+</script>
+{% endblock %}
+
+<style>
+    /* Custom styles for the results page */
+    .rainfall-result-container {
+        position: relative;
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+        border-radius: 1rem;
+    }
+    
+    .rainfall-gauge {
+        position: relative;
+        height: 120px;
+        margin: 0 auto;
+        width: 60%;
+    }
+    
+    .rainfall-gauge-outer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        border-radius: 5px 5px 0 0;
+        overflow: hidden;
+    }
+    
+    .rainfall-gauge-inner {
+        position: relative;
+        height: 100%;
+        width: 100%;
+    }
+    
+    .rainfall-gauge-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 0%;
+        background: linear-gradient(to top, #0d6efd, #0dcaf0);
+        transition: height 1.5s ease-out;
+        border-radius: 0 0 5px 5px;
+    }
+    
+    .rainfall-gauge-marker {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 1px;
+        background-color: rgba(0,0,0,0.1);
+    }
+    
+    .rainfall-gauge-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        font-size: 0.8rem;
+        color: var(--bs-secondary);
+    }
+    
+    .parameter-item {
+        margin-bottom: 1rem;
+    }
+    
+    .parameter-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+    }
+    
+    .parameter-info {
+        flex: 1;
+    }
+    
+    .impact-indicator {
+        display: inline-block;
+    }
+    
+    .impact-high {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    .impact-medium {
+        color: #fd7e14;
+        font-weight: 600;
+    }
+    
+    .impact-low {
+        color: #198754;
+        font-weight: 600;
+    }
+    
+    .weather-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Progress bar animations */
+    .progress-bar {
+        transition: width 1s ease-out;
+    }
+</style>

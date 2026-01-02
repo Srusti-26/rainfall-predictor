@@ -1,0 +1,30 @@
+# Web Framework
+Flask
+Werkzeug
+Jinja2
+
+# Data Processing
+pandas
+numpy
+
+# Machine Learning
+scikit-learn
+joblib
+
+# Data Visualization
+matplotlib
+seaborn
+
+# HTTP Requests
+requests
+
+# Development Tools
+python-dotenv
+
+# Testing
+pytest
+pytest-cov
+pytest-flask
+
+# Production Server
+gunicorn
